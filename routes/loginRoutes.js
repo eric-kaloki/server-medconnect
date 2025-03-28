@@ -8,8 +8,7 @@ const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET; // Store this in an environment variable
 
 router.post('/login', async (req, res) => {
-  const { email, password } = req.body;
-  console.log("Login request:", { email, password });
+  const { email, password, fcmToken } = req.body;
 
   try {
     // Check in doctors table
@@ -42,6 +41,12 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({ message: 'Invalid credentials' });
     }
 
+    // Save the FCM token for the user
+    await supabase
+      .from(user.role === 'doctor' ? 'doctors' : 'patients')
+      .update({ fcm_token: fcmToken })
+      .eq('email', email);
+
     // Generate JWT
     const token = jwt.sign(
       { id: user.id, role: user.role }, // Payload
@@ -50,16 +55,16 @@ router.post('/login', async (req, res) => {
     );
 
     // Successful login
-    console.log('Login successful', user);
     return res.status(200).json({
       success: true,
       data: {
         token, // Include the token in the response
-        role: user.role,
+        role: user.role, // Include the user's role
         id: user.id,
         name: user.name,
         email: user.email,
         phone: user.phone,
+        fcmToken: fcmToken, // Return the FCM token
       },
     });
   } catch (error) {

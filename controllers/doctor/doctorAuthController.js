@@ -66,4 +66,25 @@ exports.registerDoctor = async (req, res) => {
     console.error(error);
     return res.status(500).json({ message: 'Server error' });
   }
+
+  
+};
+
+// Controller to fetch doctors from the database
+exports.getDoctors = async (req, res) => {
+  try {
+    const { data: doctors, error } = await supabase
+      .from('doctors')
+      .select('*');
+
+    if (error) {
+      console.error('Error fetching doctors:', error);
+      return res.status(500).json({ message: 'Error fetching doctors', error: error.message });
+    }
+
+    return res.status(200).json({ doctors }); // Ensure this is the correct format
+  } catch (error) {
+    console.error('Server error:', error);
+    return res.status(500).json({ message: 'Server error' });
+  }
 };
