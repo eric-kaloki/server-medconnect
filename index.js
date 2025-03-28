@@ -3,6 +3,7 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const { Server } = require('socket.io'); // Import socket.io
 const http = require('http'); // Import HTTP module
+const notificationRoutes = require('./routes/notificationRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
 const patientRoutes = require('./routes/patientRoutes');
 const loginRoutes = require('./routes/loginRoutes');
@@ -10,8 +11,9 @@ const appointmentRoutes = require('./routes/appointmentRoutes');
 const recordsRoutes = require('./routes/medicalRoutes');
 const rtcRouter = require('./routes/agoraRTC');
 const {supabase} = require('./config/supabaseClient'); // Ensure correct import
-
+const https = require("https");
 const app = express();
+
 const PORT = process.env.PORT || 5000;
 
 // Create HTTP server and attach socket.io
@@ -31,6 +33,7 @@ app.use('/api/auth/', loginRoutes);
 app.use('/api/appointments/', appointmentRoutes);
 app.use('/api/records/', recordsRoutes);
 app.use('/rtc', rtcRouter); // Mount the router
+app.use("/api/notifications", notificationRoutes);
 
 app.get('/', (req, res) => {
     res.send('Hello World!');
@@ -177,6 +180,26 @@ app.post('/call-response', (req, res) => {
 
     res.status(200).json({ message: `Response received: ${response}` });
 });
+
+// List of backend URLs to ping
+const backendUrls = ["https://server-medconnect.onrender.com"]; // Add more URLs as needed
+
+// Function to ping each backend URL
+function pingBackends() {
+  backendUrls.forEach((url) => {
+    https.get(url, (res) => {
+      console.log(`Pinged ${url}: Status Code ${res.statusCode}`);
+    }).on('error', (err) => {
+      console.error(`Error pinging ${url}: ${err.message}`);
+    });
+  });
+}
+
+// Schedule pings every 10 minutes (600,000 milliseconds)
+setInterval(pingBackends, 600000);
+
+// Ping immediately when the service starts
+pingBackends();
 
 // Handling the middleware
 app.use((err, req, res, next) => {
