@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const notificationController = require('../controllers/notificationController');
+const notificationController = require('../controllers/notifications/notificationController');
 
 router.get('/:userId', notificationController.getNotifications);
 router.post('/', notificationController.addNotification);
