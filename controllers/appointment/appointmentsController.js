@@ -243,7 +243,13 @@ exports.getDoctorBlockedSlots = async (req, res) => {
 exports.blockTimeSlots = async (req, res) => {
   try {
     const doctorId = req.userId; // Get doctor ID from the middleware
+
     const { blockedSlots } = req.body; // Expecting an array of objects with date, day, and time
+    console.log('Block Time Slots Request:', { doctorId, blockedSlots });
+    if (!doctorId) {
+      return res.status(401).json({ message: 'Not authenticated.' });
+    }
+    // Validate request data
 
     if (!doctorId || !blockedSlots || !Array.isArray(blockedSlots)) {
       return res.status(400).json({ message: 'Invalid request data.' });
