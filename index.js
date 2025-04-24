@@ -25,6 +25,14 @@ const io = new Server(server, {
     },
 });
 
+// Ensure only one WebSocket server handles the upgrade process
+server.on('upgrade', (request, socket, head) => {
+    console.log('Upgrade request received');
+    io.engine.handleUpgrade(request, socket, head, (ws) => {
+        io.engine.emit('connection', ws, request);
+    });
+});
+
 app.use(cors());
 app.use(bodyParser.json());
 
