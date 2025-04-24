@@ -1,30 +1,26 @@
 const jwt = require('jsonwebtoken');
 
 const authMiddleware = (req, res, next) => {
-  const authHeader = req.get('Authorization');
+  const authHeader = req.headers['authorization'];
   if (!authHeader) {
-    return res.status(401).json({ error: 'Not authenticated.' });
+    return res.status(401).json({ message: 'Authorization header is missing' });
   }
 
-  const token = authHeader.split(' ')[1]; // Get the token from the Authorization header
-  let decodedToken;
+  const token = authHeader.split(' ')[1]; // Extract the token
+  if (!token) {
+    return res.status(401).json({ message: 'Token is missing' });
+  }
 
   try {
-    decodedToken = jwt.verify(token, process.env.JWT_SECRET); // Verify the token
-  } catch (err) {
-    console.error('Invalid token:', err);
-    return res.status(401).json({ error: 'Not authenticated.' });
+    const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify the token
+    req.userId = decoded.id; // Attach user ID to the request
+    req.userRole = decoded.role; // Attach user role to the request
+    console.log('Decoded Token:', decoded); // Debugging: Log the decoded token
+    next();
+  } catch (error) {
+    console.error('Invalid token:', error.message);
+    return res.status(401).json({ message: 'Invalid token', error: error.message });
   }
-
-  if (!decodedToken) {
-    return res.status(401).json({ error: 'Not authenticated.' });
-  }
-
-  // Assign both id and role to the request object
-  req.userId = decodedToken.id;
-  req.role = decodedToken.role;
-
-  next();
 };
 
 module.exports = authMiddleware;

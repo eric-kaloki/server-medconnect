@@ -12,6 +12,7 @@ const recordsRoutes = require('./routes/medicalRoutes');
 const rtcRouter = require('./routes/agoraRTC');
 const {supabase} = require('./config/supabaseClient'); // Ensure correct import
 const https = require("https");
+const { initializeWebRTCServer } = require('./routes/webRTC'); // Import WebRTC server logic
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -182,7 +183,7 @@ app.post('/call-response', (req, res) => {
 });
 
 // List of backend URLs to ping
-const backendUrls = ["https://server-medconnect.onrender.com"]; // Add more URLs as needed
+const backendUrls = ["https://10b7-197-136-134-5.ngrok-free.app"]; // Add more URLs as needed
 
 // Function to ping each backend URL
 function pingBackends() {
@@ -200,6 +201,9 @@ setInterval(pingBackends, 600000);
 
 // Ping immediately when the service starts
 pingBackends();
+
+// Initialize WebRTC signaling server
+initializeWebRTCServer(server);
 
 // Handling the middleware
 app.use((err, req, res, next) => {

@@ -183,7 +183,7 @@ exports.getBlockedAndBookedSlots = async (req, res) => {
       return res.status(500).json({ message: 'Error fetching blocked slots', error: blockedError.message });
     }
 
-    blockedSlots = blockedData || [];
+    blockedSlots = blockedData || []; // Ensure blockedSlots is an array
 
     // Fetch booked slots for the specified doctor and date
     const { data: bookedData, error: bookedError } = await supabase
@@ -197,7 +197,7 @@ exports.getBlockedAndBookedSlots = async (req, res) => {
       return res.status(500).json({ message: 'Error fetching booked slots', error: bookedError.message });
     }
 
-    bookedSlots = bookedData || [];
+    bookedSlots = bookedData || []; // Ensure bookedSlots is an array
 
     console.log('Blocked Slots:', blockedSlots);
     console.log('Booked Slots:', bookedSlots);
@@ -243,16 +243,19 @@ exports.getDoctorBlockedSlots = async (req, res) => {
 exports.blockTimeSlots = async (req, res) => {
   try {
     const doctorId = req.userId; // Get doctor ID from the middleware
-
     const { blockedSlots } = req.body; // Expecting an array of objects with date, day, and time
+
+    // Debugging: Log the incoming request
     console.log('Block Time Slots Request:', { doctorId, blockedSlots });
+
     if (!doctorId) {
       return res.status(401).json({ message: 'Not authenticated.' });
     }
+
     // Validate request data
 
     if (!doctorId || !blockedSlots || !Array.isArray(blockedSlots)) {
-      return res.status(400).json({ message: 'Invalid request data.' });
+            return res.status(400).json({ message: 'Invalid request data.' });
     }
 
     // Clear existing blocked slots for the doctor for the provided dates
