@@ -81,8 +81,6 @@ io.on('connection', (socket) => {
  * Expects JSON data: { recipientId, callerName, channelName }
  */
 app.post('/send-invitation', async (req, res) => {
-    console.log('Invitation request received:', req.body);
-
     const { recipientId, callerName, channelName } = req.body;
 
     if (!recipientId || !callerName || !channelName) {
@@ -90,27 +88,14 @@ app.post('/send-invitation', async (req, res) => {
     }
 
     try {
-        console.log('Sending invitation to:', recipientId);
-        // Fetch the recipient's FCM token using doctorId or patientId
-        let recipient = await supabase
-            .from('doctors')
+        const recipient = await supabase
+            .from('users')
             .select('fcm_token')
             .eq('id', recipientId)
             .single();
 
-        // If not found in 'doctors', check the 'patients' table
-        if (!recipient.data) {
-            recipient = await supabase
-                .from('patients')
-                .select('fcm_token')
-                .eq('id', recipientId)
-                .single();
-        }
-
         if (!recipient.data || !recipient.data.fcm_token) {
-            return res
-                .status(404)
-                .json({ message: 'Recipient not found or FCM token missing' });
+            return res.status(404).json({ message: 'Recipient not found or FCM token missing' });
         }
 
         const message = {
@@ -119,27 +104,18 @@ app.post('/send-invitation', async (req, res) => {
                 body: `Incoming call from ${callerName}`,
             },
             data: {
-                type: 'call_invitation',
-                callerName: callerName,
-                channelName: channelName,
+                type: 'call-invitation',
+                callerName,
+                channelName,
             },
-            token: recipient.data.fcm_token, // Use the recipient's FCM token
+            token: recipient.data.fcm_token,
         };
-        console.log('Sending message:', message);
 
         const response = await admin.messaging().send(message);
-        console.log('Successfully sent message:', response);
-
-        res
-            .status(200)
-            .json({ message: 'Invitation sent successfully', response });
+        console.log('Successfully sent FCM message:', response);
+        res.status(200).json({ message: 'Invitation sent successfully', response });
     } catch (error) {
-        console.error('Error sending message:', error);
-
-        if (error.code === 'messaging/invalid-recipient') {
-            return res.status(400).json({ message: 'Invalid recipient FCM token' });
-        }
-
+        console.error('Error sending FCM message:', error);
         res.status(500).json({ message: 'Error sending invitation', error: error.message });
     }
 });
@@ -183,7 +159,7 @@ app.post('/call-response', (req, res) => {
 });
 
 // List of backend URLs to ping
-const backendUrls = ["https://10b7-197-136-134-5.ngrok-free.app"]; // Add more URLs as needed
+const backendUrls = ["https://server-medconnect-kdeb.onrender.com"]; // Add more URLs as needed
 
 // Function to ping each backend URL
 function pingBackends() {

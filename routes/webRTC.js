@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { Server } = require('socket.io');
+const admin = require('firebase-admin');
 
 let io;
 
@@ -40,6 +41,35 @@ function initializeWebRTCServer(server) {
     socket.on('leave-room', (roomId) => {
       socket.leave(roomId);
       console.log(`User ${socket.id} left room: ${roomId}`);
+    });
+
+    // Handle call initiation and send FCM notification
+    socket.on('call-initiation', async (data) => {
+      const { recipientDeviceToken, room, callerName } = data;
+      if (!recipientDeviceToken) {
+        console.error('Recipient device token is missing.');
+        return;
+      }
+
+      const message = {
+        notification: {
+          title: 'Incoming Call',
+          body: `${callerName} is calling you.`,
+        },
+        data: {
+          type: 'call-invitation',
+          room,
+          callerName,
+        },
+        token: recipientDeviceToken,
+      };
+
+      try {
+        await admin.messaging().send(message);
+        console.log('FCM notification sent successfully.');
+      } catch (error) {
+        console.error('Error sending FCM notification:', error);
+      }
     });
 
     // Handle disconnection
