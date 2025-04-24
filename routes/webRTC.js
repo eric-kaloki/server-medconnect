@@ -46,8 +46,10 @@ function initializeWebRTCServer(server) {
     // Handle call initiation and send FCM notification
     socket.on('call-initiation', async (data) => {
       const { recipientDeviceToken, room, callerName } = data;
+      console.log(`Call initiation received. Caller: ${callerName}, Room: ${room}`);
+
       if (!recipientDeviceToken) {
-        console.error('Recipient device token is missing.');
+        console.error('Recipient device token is missing. Cannot send FCM notification.');
         return;
       }
 
@@ -65,11 +67,19 @@ function initializeWebRTCServer(server) {
       };
 
       try {
-        await admin.messaging().send(message);
-        console.log('FCM notification sent successfully.');
+        console.log('Sending FCM notification with message:', message);
+        const response = await admin.messaging().send(message);
+        console.log('FCM notification sent successfully. Response:', response);
       } catch (error) {
         console.error('Error sending FCM notification:', error);
       }
+    });
+
+    // Handle call response
+    socket.on('call-response', (data) => {
+      const { room, response } = data;
+      console.log(`Call response received. Room: ${room}, Response: ${response}`);
+      socket.to(room).emit('call-response', data);
     });
 
     // Handle disconnection

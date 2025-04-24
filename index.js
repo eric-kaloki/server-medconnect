@@ -128,6 +128,7 @@ app.post('/invitation-acknowledgment', (req, res) => {
     const { channelName, status } = req.body;
 
     if (!channelName || !status) {
+        console.error('Missing required fields in invitation acknowledgment:', req.body);
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
@@ -147,6 +148,7 @@ app.post('/call-response', (req, res) => {
     const { channelName, response } = req.body;
 
     if (!channelName || !response) {
+        console.error('Missing required fields in call response:', req.body);
         return res.status(400).json({ message: 'Missing required fields' });
     }
 
