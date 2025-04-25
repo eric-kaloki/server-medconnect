@@ -12,7 +12,6 @@ const recordsRoutes = require('./routes/medicalRoutes');
 const rtcRouter = require('./routes/agoraRTC');
 const {supabase} = require('./config/supabaseClient'); // Ensure correct import
 const https = require("https");
-const { initializeWebRTCServer } = require('./routes/webRTC'); // Import WebRTC server logic
 const app = express();
 
 const PORT = process.env.PORT || 5000;
@@ -187,9 +186,6 @@ setInterval(pingBackends, 600000);
 
 // Ping immediately when the service starts
 pingBackends();
-
-// Initialize WebRTC signaling server
-initializeWebRTCServer(server);
 
 // Handling the middleware
 app.use((err, req, res, next) => {
