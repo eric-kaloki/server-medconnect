@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const { Server } = require('socket.io'); // Import socket.io
 const http = require('http'); // Import HTTP module
 const notificationRoutes = require('./routes/notificationRoutes');
 const doctorRoutes = require('./routes/doctorRoutes');
@@ -16,21 +15,8 @@ const app = express();
 
 const PORT = process.env.PORT || 5000;
 
-// Create HTTP server and attach socket.io
+// Create HTTP server
 const server = http.createServer(app);
-const io = new Server(server, {
-    cors: {
-        origin: '*', // Allow all origins (adjust for production)
-    },
-});
-
-// Ensure only one WebSocket server handles the upgrade process
-server.on('upgrade', (request, socket, head) => {
-    console.log('Upgrade request received');
-    io.engine.handleUpgrade(request, socket, head, (ws) => {
-        io.engine.emit('connection', ws, request);
-    });
-});
 
 app.use(cors());
 app.use(bodyParser.json());
@@ -59,28 +45,6 @@ const serviceAccount = require(serviceAccountPath);
 
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-});
-
-// WebSocket connection handler
-io.on('connection', (socket) => {
-    console.log('A user connected:', socket.id);
-
-    // Handle disconnection
-    socket.on('disconnect', () => {
-        console.log('A user disconnected:', socket.id);
-    });
-
-    // Handle custom events (e.g., join a room)
-    socket.on('join-room', (roomId) => {
-        socket.join(roomId);
-        console.log(`User ${socket.id} joined room: ${roomId}`);
-    });
-
-    // Handle leaving a room
-    socket.on('leave-room', (roomId) => {
-        socket.leave(roomId);
-        console.log(`User ${socket.id} left room: ${roomId}`);
-    });
 });
 
 /**
@@ -141,9 +105,6 @@ app.post('/invitation-acknowledgment', (req, res) => {
 
     console.log(`Acknowledgment received for channel ${channelName}: ${status}`);
 
-    // Notify the initiator about the acknowledgment
-    io.to(channelName).emit('invitation-status', { status });
-
     res.status(200).json({ message: `Acknowledgment received for channel ${channelName}` });
 });
 
@@ -160,9 +121,6 @@ app.post('/call-response', (req, res) => {
     }
 
     console.log(`Response received for channel ${channelName}: ${response}`);
-
-    // Notify the initiator about the response
-    io.to(channelName).emit('call-response', { response });
 
     res.status(200).json({ message: `Response received: ${response}` });
 });
