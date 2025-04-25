@@ -16,6 +16,15 @@ router.put('/confirm-reschedule', authMiddleware, confirmReschedule); // Endpoin
 router.put('/cancel-appointment', authMiddleware, cancelAppointment); // Endpoint for canceling appointments
 router.get('/pending-appointments', authMiddleware, getPendingAppointments); // New endpoint for pending appointments
 
+// Initialize Firebase Admin with your service account key from the file
+const admin = require('firebase-admin');
+const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
+const serviceAccount = require(serviceAccountPath);
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+});
+
 router.post("/send-invitation", async (req, res) => {
     console.log("Received request to send invitation:", req.body);
   const { recipientId, callerName, channelName } = req.body;

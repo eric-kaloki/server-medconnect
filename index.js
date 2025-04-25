@@ -38,15 +38,6 @@ if (process.env.NODE_ENV !== 'production') {
     require('dotenv').config();
 }
 
-// Initialize Firebase Admin with your service account key from the file
-const admin = require('firebase-admin');
-const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
-const serviceAccount = require(serviceAccountPath);
-
-admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-});
-
 /**
  * POST /send-invitation
  * Expects JSON data: { recipientId, callerName, channelName }
