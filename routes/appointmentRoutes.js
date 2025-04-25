@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { bookAppointment, getAppointments, getDoctorAppointments, getBlockedAndBookedSlots, blockTimeSlots, getDoctorBlockedSlots, rescheduleAppointment, confirmReschedule, cancelAppointment, getPendingAppointments } = require('../controllers/appointment/appointmentsController');
 const authMiddleware = require('../middleware/auth'); // Import the auth middleware
-const {supabase} = require('./config/supabaseClient'); // Ensure correct import
+const {supabase} = require('../config/supabaseClient'); // Ensure correct import
 const admin = require('firebase-admin');
 
 const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
