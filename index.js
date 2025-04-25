@@ -51,46 +51,63 @@ admin.initializeApp({
  * POST /send-invitation
  * Expects JSON data: { recipientId, callerName, channelName }
  */
-app.post('/send-invitation', async (req, res) => {
-    const { recipientId, callerName, channelName } = req.body;
 
-    if (!recipientId || !callerName || !channelName) {
-        return res.status(400).json({ message: 'Missing required fields' });
+router.post("/send-invitation", async (req, res) => {
+    console.log("Received request to send invitation:", req.body);
+  const { recipientId, callerName, channelName } = req.body;
+
+  if (!recipientId || !callerName || !channelName) {
+    return res.status(400).json({ message: "Missing required fields" });
+  }
+
+  try {
+    // Retrieve the recipient's FCM token from Supabase
+    // Check in the "doctors" table
+    let { data: recipient, error } = await supabase
+      .from("doctors")
+      .select("fcm_token")
+      .eq("id", recipientId)
+      .single();
+
+    // If not found in "doctors", check in the "patients" table
+    if (!recipient || error) {
+      ({ data: recipient, error } = await supabase
+        .from("patients")
+        .select("fcm_token")
+        .eq("id", recipientId)
+        .single());
     }
 
-    try {
-        const recipient = await supabase
-            .from('users')
-            .select('fcm_token')
-            .eq('id', recipientId)
-            .single();
-
-        if (!recipient.data || !recipient.data.fcm_token) {
-            return res.status(404).json({ message: 'Recipient not found or FCM token missing' });
-        }
-
-        const message = {
-            notification: {
-                title: 'Incoming Call',
-                body: `Incoming call from ${callerName}`,
-            },
-            data: {
-                type: 'call-invitation',
-                callerName,
-                channelName,
-            },
-            token: recipient.data.fcm_token,
-        };
-
-        const response = await admin.messaging().send(message);
-        console.log('Successfully sent FCM message:', response);
-        res.status(200).json({ message: 'Invitation sent successfully', response });
-    } catch (error) {
-        console.error('Error sending FCM message:', error);
-        res.status(500).json({ message: 'Error sending invitation', error: error.message });
+    if (error || !recipient || !recipient.fcm_token) {
+      return res
+        .status(404)
+        .json({ message: "Recipient not found or FCM token missing" });
     }
+
+    // Send FCM notification
+    const message = {
+      notification: {
+        title: "Incoming Call",
+        body: `Incoming call from ${callerName}`,
+      },
+      data: {
+        type: "call-invitation",
+        callerName,
+        channelName,
+      },
+      token: recipient.fcm_token,
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log("Successfully sent FCM message:", response);
+    res.status(200).json({ message: "Invitation sent successfully", response });
+  } catch (error) {
+    console.error("Error sending FCM message:", error);
+    res
+      .status(500)
+      .json({ message: "Error sending invitation", error: error.message });
+  }
 });
-
 /**
  * POST /invitation-acknowledgment
  * Expects JSON data: { channelName, status }
