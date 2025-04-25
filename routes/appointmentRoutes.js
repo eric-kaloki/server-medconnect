@@ -4,11 +4,14 @@ const { bookAppointment, getAppointments, getDoctorAppointments, getBlockedAndBo
 const authMiddleware = require('../middleware/auth'); // Import the auth middleware
 const {supabase} = require('./config/supabaseClient'); // Ensure correct import
 const admin = require('firebase-admin');
+
 const serviceAccountPath = process.env.GOOGLE_APPLICATION_CREDENTIALS;
 const serviceAccount = require(serviceAccountPath);
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
 });
+
+
 router.post('/book', authMiddleware, bookAppointment); // Protect this route
 router.get('/patient-appointments', authMiddleware, getAppointments); // Protect this route
 router.get('/doctor-appointments', authMiddleware, getDoctorAppointments);
